@@ -1,60 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../firebaseConfig';
-import { query, where, collection, getDocs } from 'firebase/firestore';
+import { query, where, collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 const InternProfile = () => {
   const location = useLocation();
-  const passedUser = location.state?.user; // User data passed via route state
+  const passedUser = location.state?.user;
   const [user, setUser] = useState(passedUser);
   const [profileData, setProfileData] = useState({});
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableData, setEditableData] = useState({
+    dob: '',
+    address: '',
+    contact: ''
+  });
 
-  // Print initial user data in the console
-  console.log("Initial passed user data:", passedUser);
-
-  // Fetch user data from Firestore if not available in route state
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!passedUser?.userID) {
-        console.error('User data not passed via state, attempting to fetch from Firestore.');
-        // Retrieve userID from local storage or fallback to an example ID for testing
-        const userID = 'exampleUserID'; 
-        console.log("Fetching user data with ID:", userID);
-        const userDocRef = doc(db, 'users', userID);
-        const userSnapshot = await getDoc(userDocRef);
-        if (userSnapshot.exists()) {
-          const userData = userSnapshot.data();
-          console.log("Fetched user data from Firestore:", userData);
-          setUser(userData);
-        } else {
-          setError('User data not found.');
-        }
-      }
-    };
-    fetchUserData();
-  }, [passedUser]);
-
-  // Fetch Profile Data using userID from the intern collection
   useEffect(() => {
     const fetchProfileData = async () => {
       if (user?.userID) {
         try {
-          console.log("Fetching profile data for userID:", user.userID);
-          // Query the 'intern' collection where 'userID' field matches the given user.userID
           const profileQuery = query(
-            collection(db, 'intern'), 
-            where('userID', '==', user.userID) // Match the field 'userID'
+            collection(db, 'intern'),
+            where('userID', '==', user.userID)
           );
-          
           const profileSnapshot = await getDocs(profileQuery);
-          
           if (!profileSnapshot.empty) {
-            const profile = profileSnapshot.docs[0].data(); // Assuming only one document matches
-            console.log("Fetched profile data:", profile);
-            setProfileData(profile);
+            const profile = profileSnapshot.docs[0].data();
+            const { userID, password, ...displayData } = profile; // Exclude sensitive fields
+            setProfileData(displayData);
+            setEditableData({
+              dob: profile.dob || '',
+              address: profile.address || '',
+              contact: profile.contact || ''
+            });
           } else {
             setError('Profile data not found.');
           }
@@ -64,23 +45,19 @@ const InternProfile = () => {
         }
       }
     };
-
     fetchProfileData();
   }, [user]);
 
-  // Fetch Applications
   useEffect(() => {
     const fetchApplications = async () => {
       if (user?.userID) {
         try {
-          console.log("Fetching applications for userID:", user.userID);
           const applicationsQuery = query(
             collection(db, 'apply'),
             where('userID', '==', user.userID)
           );
           const applicationsSnapshot = await getDocs(applicationsQuery);
           const applicationsList = applicationsSnapshot.docs.map((doc) => doc.data());
-          console.log("Fetched applications:", applicationsList);
           setApplications(applicationsList);
         } catch (err) {
           setError('Error fetching applications.');
@@ -89,9 +66,38 @@ const InternProfile = () => {
       }
       setLoading(false);
     };
-
     fetchApplications();
   }, [user]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditableData({ ...editableData, [name]: value });
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Save updated data
+      const saveProfile = async () => {
+        try {
+          const profileQuery = query(
+            collection(db, 'intern'),
+            where('userID', '==', user.userID)
+          );
+          const profileSnapshot = await getDocs(profileQuery);
+          if (!profileSnapshot.empty) {
+            const docRef = profileSnapshot.docs[0].ref;
+            await updateDoc(docRef, editableData);
+            alert('Profile updated successfully');
+          }
+        } catch (err) {
+          setError('Error updating profile.');
+          console.error(err);
+        }
+      };
+      saveProfile();
+    }
+    setIsEditing(!isEditing);
+  };
 
   if (loading) return <p>Loading profile details...</p>;
   if (error) return <p>{error}</p>;
@@ -99,17 +105,67 @@ const InternProfile = () => {
   return (
     <div className="w-full bg-gray-900 text-white py-10 px-4 lg:px-20">
       <div className="container mx-auto flex flex-col gap-10">
-        {/* Profile Details Section */}
+        
+        {/* Profile Section */}
         <div className="bg-gray-800 p-8 rounded-lg shadow-md">
           <h2 className="text-3xl font-bold mb-6">Profile Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Object.keys(profileData).map((field) => (
-              <div key={field}>
-                <label className="capitalize">{field}</label>
-                <p>{profileData[field]}</p>
+            {Object.keys(profileData).map((key) => (
+              <div key={key} className="flex flex-col">
+                <label className="capitalize text-gray-400">{key.replace(/_/g, ' ')}</label>
+                <p className="text-lg font-semibold">{profileData[key]}</p>
               </div>
             ))}
+
+            {/* Editable Fields */}
+            <div>
+              <label>Date of Birth</label>
+              {isEditing ? (
+                <input
+                  type="date"
+                  name="dob"
+                  value={editableData.dob}
+                  onChange={handleInputChange}
+                  className="w-full p-2 rounded bg-gray-700 text-white"
+                />
+              ) : (
+                <p className="text-lg font-semibold">{editableData.dob}</p>
+              )}
+            </div>
+            <div>
+              <label>Address</label>
+              {isEditing ? (
+                <textarea
+                  name="address"
+                  value={editableData.address}
+                  onChange={handleInputChange}
+                  className="w-full p-2 rounded bg-gray-700 text-white"
+                />
+              ) : (
+                <p className="text-lg font-semibold">{editableData.address}</p>
+              )}
+            </div>
+            <div>
+              <label>Contact</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="contact"
+                  value={editableData.contact}
+                  onChange={handleInputChange}
+                  className="w-full p-2 rounded bg-gray-700 text-white"
+                />
+              ) : (
+                <p className="text-lg font-semibold">{editableData.contact}</p>
+              )}
+            </div>
           </div>
+          <button
+            onClick={handleEditToggle}
+            className="mt-6 bg-blue-500 px-6 py-2 rounded text-white font-bold hover:bg-blue-600"
+          >
+            {isEditing ? 'Save' : 'Edit'}
+          </button>
         </div>
 
         {/* Applications Section */}
