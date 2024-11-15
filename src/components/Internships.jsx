@@ -155,7 +155,7 @@ const Internships = () => {
                                     />
                                     <h2 className="text-2xl font-bold">{internship.title}</h2>
                                     <p className="text-gray-400 mt-2">
-                                        {internship.type} | ₹{internship.salary ? internship.salary.toLocaleString() : 'Undisclosed'} | {internship.experience} experience
+                                        {internship.type} | ₹{internship.stipend ? internship.stipend.toLocaleString() : 'Undisclosed'} | {internship.experience} experience
                                     </p>
                                     <p className="text-gray-500 mt-1">Location: {internship.location}</p>
                                     <p className="text-gray-500 mt-1">Company: {internship.company}</p>
