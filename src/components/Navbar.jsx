@@ -9,11 +9,7 @@ const Navbar = () => {
 
   // Check if the user is logged in based on user context
   useEffect(() => {
-    if (user) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
+    setIsLoggedIn(!!user);
   }, [user]);
 
   const handleLogout = () => {
@@ -25,9 +21,9 @@ const Navbar = () => {
 
   const handleProfileClick = () => {
     if (user?.type === 'intern') {
-      navigate('/InternProfile'); // Navigate to InternProfile if user is intern
+      navigate('/InternProfile', { state: { user } }); // Pass user data to InternProfile
     } else if (user?.type === 'recruiter') {
-      navigate('/recruiter'); // Navigate to recruiter profile if user is recruiter
+      navigate('/recruiter', { state: { user } }); // Pass user data to recruiter profile
     }
   };
 
