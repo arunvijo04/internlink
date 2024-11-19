@@ -311,58 +311,59 @@ const Recruiter = () => {
       </form>
 
       <h2 className="text-2xl font-bold mt-10 text-center text-blue-500">Current Internships for {company}</h2>
-      {internships.length > 0 ? (
-        <ul className="mt-4 space-y-4">
-          {internships.map((internship) => (
-            <li key={internship.id} className="p-4 bg-gray-800 border border-gray-700 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold text-blue-300">{internship.title}</h3>
-              <p className="text-gray-400">{internship.description}</p>
-              <p className="text-gray-400"><strong>Duration:</strong> {internship.duration}</p>
-              <p className="text-gray-400"><strong>Location:</strong> {internship.location}</p>
+{internships.length > 0 ? (
+  <ul className="mt-4 max-w-4xl mx-auto space-y-4">
+    {internships.map((internship) => (
+      <li key={internship.id} className="p-4 bg-gray-800 border border-gray-700 rounded-lg shadow-md">
+        <h3 className="text-xl font-semibold text-blue-300">{internship.title}</h3>
+        <p className="text-gray-400">{internship.description}</p>
+        <p className="text-gray-400"><strong>Duration:</strong> {internship.duration}</p>
+        <p className="text-gray-400"><strong>Location:</strong> {internship.location}</p>
 
-              {/* Remove internship button */}
-              <button
-                onClick={() => handleRemoveInternship(internship.id)}
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg mt-4"
-              >
-                Remove Internship
-              </button>
+        {/* Remove internship button */}
+        <button
+          onClick={() => handleRemoveInternship(internship.id)}
+          className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg mt-4"
+        >
+          Remove Internship
+        </button>
 
-              {/* Display pending applications for this internship */}
-              <div className="mt-4">
-                <h4 className="text-lg font-semibold text-gray-300">Pending Applications:</h4>
-                {applications[internship.id]?.length > 0 ? (
-                  <ul className="mt-2 space-y-2">
-                    {applications[internship.id].map(application => (
-                      <li key={application.id} className="text-gray-400 flex justify-between items-center">
-                        <span><strong>{application.userID}</strong> - Status: <em>{application.status}</em></span>
-                        <div>
-                          <button
-                            onClick={() => handleApprove(application.id, internship.id)}
-                            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg mr-2"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleReject(application.id, internship.id)}
-                            className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500">No pending applications for this internship.</p>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-4 text-gray-400">No internships available for this company.</p>
-      )}
+        {/* Display pending applications for this internship */}
+        <div className="mt-4">
+          <h4 className="text-lg font-semibold text-gray-300">Pending Applications:</h4>
+          {applications[internship.id]?.length > 0 ? (
+            <ul className="mt-2 space-y-2">
+              {applications[internship.id].map(application => (
+                <li key={application.id} className="text-gray-400 flex justify-between items-center">
+                  <span><strong>{application.userID}</strong> - Status: <em>{application.status}</em></span>
+                  <div>
+                    <button
+                      onClick={() => handleApprove(application.id, internship.id)}
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg mr-2"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleReject(application.id, internship.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">No pending applications for this internship.</p>
+          )}
+        </div>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p className="mt-4 text-gray-400">No internships available for this company.</p>
+)}
+
     </div>
   );
 };
